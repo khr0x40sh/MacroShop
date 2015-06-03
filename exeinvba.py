@@ -22,9 +22,9 @@ else: sys.exit(0)
 
 def formStr(varstr, instr):
  holder = []
- str1 = ''
+ str1 = '\tDim '+ varstr
  str2 = ''
- str1 = '\t' + varstr + ' = "' + instr[:54] + '"' 
+ str1 = str1 + '\r\n\t' + varstr + ' = "' + instr[:54] + '"' 
  for i in xrange(54, len(instr), 48):
  	holder.append('\t' + varstr + ' = '+ varstr +' + "'+instr[i:i+48])
  	str2 = '"\r\n'.join(holder)
@@ -41,7 +41,7 @@ print "[+] Encoded data is %d bytes" % (len(b64), )
 
 b64 = b64.replace("\n","")
 
-str = formStr("var",b64)
+str = formStr("var1",b64)
 #i = 0
 #str = 'Dim var1\n'
 #for line in b64:
