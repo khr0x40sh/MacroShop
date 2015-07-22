@@ -2,6 +2,7 @@
 
 import os, sys
 import argparse
+import re
 
 #if len(sys.args) < 2:
 #	print ""
@@ -15,6 +16,11 @@ parser.add_argument('--dest', dest='dest', action='store', default='C:\\Users\\P
 #parser.add_argument('--exe', dest='exe_name', action='store', default='test.exe')
 
 args=parser.parse_args()
+if '\\' not in args.dest:
+	print "[!] Error: The Destination, " + args.dest + " is not escaped properly. Please escape all backslashes and try again."
+	print "[!]    ex: C:\\temp.exe"
+	sys.exit(1)
+
 
 #OPEN THE FILE
 if os.path.isfile(args.exe_name): todo = open(args.exe_name, 'rb').read()
