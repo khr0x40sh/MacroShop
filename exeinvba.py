@@ -35,8 +35,8 @@ def formStr(varstr, instr):
 
 #ENCODE THE FILE
 print "[+] Encoding %d bytes" % (len(todo), )
-b64b = todo.encode("base64")	
-print "[+] Encoded data is %d bytes" % (len(b64b), )
+b64 = todo.encode("base64")	
+print "[+] Encoded data is %d bytes" % (len(b64), )
 b64 = b64.replace("\n","")
 
 ############
