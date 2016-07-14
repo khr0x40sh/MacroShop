@@ -9,7 +9,7 @@ python macro_safe.py test.bat test.txt
 2. exeinvba.py
 
    Generates VB code for including and unpacking a portable executable onto a file system for delivery via Office Macro.  To include, enable the developer menu in Office, head to Visual Basic tab, double click on This_Workbook and paste the contents of the output file.  Requires a PE. Syntax is:
-python exeinvba.py --exe test.exe --out test.vb [--dest "C:\\Users\\Public\\Documents\\test.exe"]
+python exeinvba.py --exe test.exe --out test.vb --dest "C:\\Users\\Public\\Documents\\test.exe"
 Ensure any backslashes are escaped in the dest variable
 
 3. macro_safe_old.py
